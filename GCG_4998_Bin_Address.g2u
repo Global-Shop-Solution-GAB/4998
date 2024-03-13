@@ -1,0 +1,172 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'BN, July 19, 2018
+'Customer: Gamblit Gaming, LLC 
+'***MUST BE ON 2017.1 AND APPLY HOTFIXES FOR 2017.1 TO USE THIS PROJECT AS THE HOOKS ARE ONLY AVAILABLE ON THAT VERSION***
+
+'This project will add an extra fields (3 labels and 3 textboxes) to the Bin Master that will store an Address associated with the Bin Master
+'Path: 'Inventory > File > Bin Masters > Open/New/Delete
+
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+'	F.odbc.Connection!conx.OpenCompanyConnection
+'	f.ODBC.Connection!conx.Execute("CREATE TABLE GCG_4998_Bin_Address(BIN CHAR(6), LOCN CHAR(2), Address1 CHAR(100), Address2 CHAR(100), Address3 CHAR(100));")
+'	f.ODBC.Connection!conx.Close	
+	F.Intrinsic.Control.SelectCase(v.Caller.Hook)
+		'Populate hook 		
+		f.Intrinsic.Control.Case(26400)		
+			f.Intrinsic.Control.CallSub("Name_and_Show_Hidden_Controls")
+		'Consecutive hooks for: Next, Previous, Bin Change, Bin Browser
+		F.Intrinsic.Control.CaseAny(26401,26402,26420,26422)
+			F.odbc.Connection!conx.OpenCompanyConnection
+			f.Intrinsic.Control.CallSub("Get_Bin_Address")
+			f.ODBC.Connection!conx.Close
+		'Post Save hook	
+		F.Intrinsic.Control.Case(26417)
+			F.odbc.Connection!conx.OpenCompanyConnection
+			f.Intrinsic.Control.CallSub("Save_Bin_Address")
+			f.ODBC.Connection!conx.Close
+	F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.Catch
+	Function.Intrinsic.String.Build("Subroutine Error {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+
+Program.Sub.Main.End
+
+Program.Sub.Name_and_Show_Hidden_Controls.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+	
+	'PL for horizontal position, PT for Set vertical position, PW for Width
+			
+	'Rename Bin Description to Company
+	Variable.Passed.000100.Set("Company/Location")
+	'Add Label 1
+	V.Passed.GAB-LBL-1.Set("Address 1")
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-LBL-1,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-LBL-1,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-LBL-1","PL",215)
+	F.Intrinsic.Variable.SetProperty("GAB-LBL-1","PT",65)	
+	'Add Textbox 1
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-TEXT-1,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-TEXT-1,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PL",215)		
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PT",80)
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-1","PW",191)
+	V.Passed.GAB-TEXT-1.Set("")	
+	'Add Label 2
+	V.Passed.GAB-LBL-2.Set("Address 2")	
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-LBL-2,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-LBL-2,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-LBL-2","PL",215)	
+	F.Intrinsic.Variable.SetProperty("GAB-LBL-2","PT",95)	
+	'Add TextBox 2
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-TEXT-2,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-TEXT-2,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-TEXT-2","PL",215)		
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-2","PT",110)
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-2","PW",191)
+	v.Passed.GAB-TEXT-2.Set("")
+	'Add Label 3
+	V.Passed.GAB-LBL-3.Set("City - State Zip Code")	
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-LBL-3,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-LBL-3,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-LBL-3","PL",215)	
+	F.Intrinsic.Variable.SetProperty("GAB-LBL-3","PT",125)	
+	'Add TextBox 3
+	f.Intrinsic.UI.ChangeCallerProperty(v.Passed.GAB-TEXT-3,"HIDE",0)
+	F.Intrinsic.UI.ChangeCallerProperty(V.Passed.GAB-TEXT-3,"LOCK",0)
+	f.Intrinsic.Variable.SetProperty("GAB-TEXT-3","PL",215)		
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-3","PT",140)
+	F.Intrinsic.Variable.SetProperty("GAB-TEXT-3","PW",191)
+	v.Passed.GAB-TEXT-3.Set("")
+
+F.Intrinsic.Control.Catch
+	Function.Intrinsic.String.Build("Subroutine Error {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+
+Program.Sub.Name_and_Show_Hidden_Controls.End
+
+Program.Sub.Get_Bin_Address.Start
+'Get Address from GCG_4998_Bin_Address based on Bin and Location
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareString(sError,sSQL,sRet)
+	'V.Passed.000001: Bin
+	'V.Passed.000003: Location
+	f.Intrinsic.UI.InvokeWaitDialog("Getting Bin Address...")
+	f.Intrinsic.String.Build("Select Address1,Address2,Address3 from GCG_4998_Bin_Address Where BIN = '{0}' and LOCN = '{1}'",V.Passed.000001,V.Passed.000003,v.Local.sSQL)
+	f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+		f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+		V.Passed.GAB-TEXT-1.Set(v.Local.sRet(0))
+		V.Passed.GAB-TEXT-2.Set(v.Local.sRet(1))
+		V.Passed.GAB-TEXT-3.Set(v.Local.sRet(2))
+	f.Intrinsic.Control.EndIf	
+	f.Intrinsic.UI.CloseWaitDialog
+
+F.Intrinsic.Control.Catch
+	Function.Intrinsic.String.Build("Subroutine Error {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End 
+F.Intrinsic.Control.EndTry
+Program.Sub.Get_Bin_Address.End
+
+Program.Sub.Save_Bin_Address.Start
+'Save Address to custom table 4998_Bin_Address
+f.Intrinsic.Control.Try
+	v.Local..BulkDeclareString(sError,sSQL,sRet)
+	'V.Passed.000001: Bin
+	'V.Passed.000003: Location
+	
+	f.Intrinsic.UI.InvokeWaitDialog("Saving Bin Address...")
+	'Check to see if that Bin has Address, if yes, update it, else, insert record to the table
+	f.Intrinsic.String.Build("Select * from GCG_4998_Bin_Address Where BIN = '{0}' and LOCN = '{1}'",V.Passed.000001,V.Passed.000003,v.Local.sSQL)
+	f.ODBC.Connection!conx.ExecuteAndReturn(v.Local.sSQL,v.Local.sRet)
+	f.Intrinsic.Control.If(v.Local.sRet,<>,"")
+		f.Intrinsic.String.Build("Update GCG_4998_Bin_Address set Address1 = '{0}', Address2 = '{1}', Address3 = '{2}' where BIN = '{3}' and LOCN = '{4}' ",V.Passed.GAB-TEXT-1,V.Passed.GAB-TEXT-2,V.Passed.GAB-TEXT-3,V.Passed.000001,V.Passed.000003,v.Local.sSQL)	
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+	'No record exists in the GCG_4998_Bin_Address yet
+	f.Intrinsic.Control.Else	
+		f.Intrinsic.String.Build("Insert into GCG_4998_Bin_Address (BIN,LOCN,Address1,Address2,Address3) values ('{0}','{1}','{2}','{3}','{4}')",V.Passed.000001,V.Passed.000003,V.Passed.GAB-TEXT-1,V.Passed.GAB-TEXT-2,V.Passed.GAB-TEXT-3,v.Local.sSQL)
+		f.ODBC.Connection!conx.Execute(v.Local.sSQL)
+	f.Intrinsic.Control.EndIf
+	V.Passed.GAB-TEXT-1.Set("")
+	V.Passed.GAB-TEXT-2.Set("")
+	V.Passed.GAB-TEXT-3.Set("")
+	f.Intrinsic.UI.CloseWaitDialog
+
+F.Intrinsic.Control.Catch
+	Function.Intrinsic.String.Build("Subroutine Error {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Save_Bin_Address.End
+
+Program.Sub.Unload.Start
+f.Intrinsic.Control.Try
+	v.Local.sError.Declare
+
+	F.Intrinsic.Control.If(V.ODBC.conx.State,=,1)
+		F.ODBC.Connection!conx.close
+	F.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	Function.Intrinsic.String.Build("Subroutine Error {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End 
+F.Intrinsic.Control.EndTry
+Program.Sub.Unload.End
+
+
